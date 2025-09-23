@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Image</title>
+</head>
+<body>
+  <h1>Upload Coconut Image</h1>
+
+  <!-- Input เลือกรูป -->
+  <input type="file" id="imageInput" />
+
+  <!-- ปุ่มอัปโหลด -->
+  <button id="uploadBtn">Upload</button>
+
+  <!-- แสดงผลลัพธ์ -->
+  <div id="result"></div>
+
+  <script>
+    const uploadBtn = document.getElementById('uploadBtn');
+    const imageInput = document.getElementById('imageInput');
+    const resultDiv = document.getElementById('result');
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!imageInput.files.length) {
+        alert("Please select an image first!");
+        return;
+      }
+
+      const file = imageInput.files[0];
+      const formData = new FormData();
+      formData.append("file", file);  // ต้องตรงกับชื่อ field ใน FastAPI
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/upload-image", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) throw new Error("API request failed");
+
+        const data = await response.json();
+        resultDiv.innerHTML = `
+          <p>Filename: ${data.filename}</p>
+          <p>Content type: ${data.content_type}</p>
+          <p>Saved to: ${data.saved_to}</p>
+          <p>Status: ${data.status}</p>
+        `;
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

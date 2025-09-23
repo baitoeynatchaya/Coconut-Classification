@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Echo Test</title>
+</head>
+<body>
+  <h1>Echo API Test</h1>
+
+  <!-- Input ให้กรอกข้อความ -->
+  <input type="text" id="textInput" placeholder="Type something..." />
+
+  <!-- ปุ่ม -->
+  <button id="echoBtn">Send to API</button>
+
+  <!-- แสดงผลลัพธ์ -->
+  <div id="result"></div>
+
+  <script>
+    const echoBtn = document.getElementById('echoBtn');
+    const textInput = document.getElementById('textInput');
+    const resultDiv = document.getElementById('result');
+
+    echoBtn.addEventListener('click', async () => {
+      const text = textInput.value.trim();
+      if (!text) {
+        alert("Please enter some text!");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/echo/${encodeURIComponent(text)}`);
+        if (!response.ok) throw new Error("API request failed");
+
+        const data = await response.json();
+        resultDiv.innerHTML = `<p>API Response: ${JSON.stringify(data)}</p>`;
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
