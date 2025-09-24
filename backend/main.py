@@ -5,11 +5,20 @@ import shutil
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
+import uvicorn
 
 # สร้าง FastAPI app 
 app = FastAPI()
 
 os.makedirs("uploads", exist_ok=True)
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",  # Import string: "filename:app_variable"
+        host="localhost", 
+        port=5000, 
+        reload=True
+    )
 
 # --- CORS ---
 app.add_middleware(

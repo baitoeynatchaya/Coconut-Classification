@@ -2,8 +2,11 @@ pip install -r requirements.txt   //คำสั่งติดตั้ง//
 
 pip install fastapi uvicorn tensorflow
 
-uvicorn main:app --reload // run main // cd เข้า backend ก่อน
+//deprecated
+<!-- uvicorn main:app --reload // run main // cd เข้า backend ก่อน -->
 
+**use this
+python main.py
 
 bug
  - update user image size
