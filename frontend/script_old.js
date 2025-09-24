@@ -1,11 +1,10 @@
-// Element อ้างอิง
-console.log("test naja")
+// Elements
 const imageInput = document.getElementById("imageInput");
-const uploadBtn = document.getElementById("uploadBtn");
 const previewSection = document.getElementById("previewSection");
 const previewImg = document.getElementById("preview");
 const overlayDiv = document.getElementById("overlay");
 const resetBtn = document.getElementById("resetBtn");
+const analyzeBtn = document.getElementById("analyzeBtn");
 
 const uploadSection = document.getElementById("uploadSection");
 const loadingSection = document.getElementById("loadingSection");
@@ -19,8 +18,6 @@ const harvestStatus = document.getElementById("harvestStatus");
 const characteristics = document.getElementById("characteristics");
 const recommendations = document.getElementById("recommendations");
 
-const resultDiv = document.getElementById("result");
-
 // Reset state
 function resetAll() {
   uploadSection.classList.remove("hidden");
@@ -30,7 +27,6 @@ function resetAll() {
   resultSection.classList.add("hidden");
   previewImg.src = "";
   overlayDiv.classList.add("hidden");
-  resultDiv.innerHTML = "";
 }
 
 // Preview รูป
@@ -39,7 +35,6 @@ imageInput.addEventListener("change", () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       previewImg.src = e.target.result;
-      previewImg.classList.remove("hidden");
       previewSection.classList.remove("hidden");
       uploadSection.classList.add("hidden");
       overlayDiv.classList.add("hidden");
@@ -51,8 +46,8 @@ imageInput.addEventListener("change", () => {
 // Reset button
 resetBtn.addEventListener("click", resetAll);
 
-// Upload + Predict
-uploadBtn.addEventListener("click", async () => {
+// Analyze button (call API or mock)
+analyzeBtn.addEventListener("click", async () => {
   if (!imageInput.files.length) {
     alert("กรุณาเลือกรูปภาพก่อน!");
     return;
@@ -76,38 +71,27 @@ uploadBtn.addEventListener("click", async () => {
 
     const data = await response.json();
 
-    // แสดง overlay บนรูป
+    // Overlay บนรูป
     overlayDiv.innerText = `${data.prediction} (${(data.probability*100).toFixed(2)}%)`;
     overlayDiv.classList.remove("hidden");
 
-    // API Result
-    resultDiv.innerHTML = `
-      <p>✅ อัปโหลดสำเร็จ</p>
-      <p><b>ไฟล์:</b> ${data.filename}</p>
-      <p><b>ผลวิเคราะห์:</b> ${data.prediction}</p>
-      <p><b>ความมั่นใจ:</b> ${(data.probability * 100).toFixed(2)}%</p>
-    `;
-
-    // UI Result Section (ใช้ข้อมูล API)
+    // Show result
     loadingSection.classList.add("hidden");
     resultSection.classList.remove("hidden");
 
     classification.textContent = data.prediction;
     confidence.textContent = (data.probability * 100).toFixed(2);
-
-    harvestStatus.textContent =
-      data.prediction === "ระยะที่ 6" ? "พร้อมเก็บเกี่ยว" : "ยังไม่พร้อม";
-
+    harvestStatus.textContent = data.prediction === "ระยะที่ 6" ? "พร้อมเก็บเกี่ยว" : "ยังไม่พร้อม";
     characteristics.innerHTML = `<li>ข้อมูลจาก API</li>`;
     recommendations.textContent = "ใช้ข้อมูล API เป็นหลัก";
   } catch (err) {
     console.warn("API Error, fallback to mock:", err.message);
-    startMockAnalysis(file);
+    startMockAnalysis();
   }
 });
 
-// Mock Analysis (ใช้เมื่อ API error)
-function startMockAnalysis(file) {
+// Mock Analysis
+function startMockAnalysis() {
   loadingSection.classList.remove("hidden");
   setTimeout(() => {
     loadingSection.classList.add("hidden");
