@@ -1,9 +1,11 @@
+import { apiRequest } from "./apiClient.js";
+
 console.log("is worked")
 
 const uploadContainer = document.getElementById("uploadContainer");
 const fileInput = document.getElementById("fileInput");
+const analyzeBtn = document.getElementById("analyzeBtn");
 
-// When container is clicked, trigger file input
 uploadContainer.addEventListener("click", () => {
   console.log("click")
   fileInput.click();
@@ -28,7 +30,8 @@ fileInput.addEventListener("change", () => {
     reader.readAsDataURL(file);
 });
 
-/*
-bug
- - update user image size
-*/
+analyzeBtn.addEventListener("click", async () => {
+    console.log("analyze click");
+    const result = await apiRequest("");
+    console.info(result);
+})

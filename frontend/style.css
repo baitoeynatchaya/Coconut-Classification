@@ -1,4 +1,4 @@
-/* รีเซ็ตค่าเบื้องต้น */
+/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -6,9 +6,9 @@
 }
 
 html, body {
-  height: 100%;              /* ใช้เต็มความสูง */
+  height: 100%;
   display: flex;
-  flex-direction: column;    /* จัดเป็นคอลัมน์ */
+  flex-direction: column;
 }
 
 body {
@@ -44,7 +44,7 @@ header .logo {
   width: 90%;
   max-width: 900px;
   margin: auto;
-  flex: 1;   /* ดัน footer ลงล่าง */
+  flex: 1;
 }
 
 /* Card */
@@ -63,42 +63,40 @@ header .logo {
   border: 2px dashed #125407;
   border-radius: 12px;
   background: #fafafa;
-  /* background-color: red; */
   cursor: pointer;
 }
-
 .upload-icon {
   font-size: 40px;
   margin-bottom: 10px;
 }
-/* #previewSection {
-  text-align: center;
-}
-#previewImage {
-  max-width: 250px;
-  border-radius: 12px;
-  margin-bottom: 10px;
-} */
-#resetBtn {
+
+/* Analyze Button */
+#analyzeBtn {
   background: #125407;
   color: #fff;
   border: none;
-  padding: 10px 15px;
+  padding: 12px 20px;
   border-radius: 8px;
   cursor: pointer;
+  margin-top: 15px;
+  display: block;
+  width: 100%;
+  font-size: 16px;
+}
+#analyzeBtn:hover {
+  background-color: #30b219;
 }
 
 /* Hidden */
 .hidden {
-  display: none;
-  background-color: red;
+  /* display: none; */
 }
 
 /* Error */
 .error {
-  border: 2px solid #ff4d4d;
+  border: 2px solid #125407;
   background: #ffe5e5;
-  color: #b30000;
+  color: #125407;
 }
 
 /* Stage Info */
@@ -120,6 +118,5 @@ footer {
   padding: 15px;
   background: #125407;
   color: #fff;
-  margin-top: auto;       /* ดันไปล่างสุด */
-  border-radius: 0;       /* เอาโค้งออก */
+  margin-top: auto;
 }
