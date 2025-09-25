@@ -23,8 +23,7 @@ if __name__ == "__main__":
 # --- CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # หรือใส่เฉพาะ origin ของเว็บ เช่น ["http://localhost:5500"]
-    allow_credentials=True,
+    allow_origins=["*"], 
     allow_methods=["*"],
     allow_headers=["*"],
 )
