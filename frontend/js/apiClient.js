@@ -1,20 +1,17 @@
 const API_BASE_URL = "http://localhost:5000";
 
-export async function apiRequest(endpoint, method = "GET", data = null, headers = {}) {
+export async function apiRequest(endpoint, method = "GET", data = null) {
   const url = `${API_BASE_URL}${endpoint}`;
 
   const options = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
+    method
   };
 
   if (data) {
-    options.body = JSON.stringify(data);
+    options.body = data;
   }
 
+  console.log(options)
   try {
     const response = await fetch(url, options);
 

@@ -14,7 +14,7 @@ os.makedirs("uploads", exist_ok=True)
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",  # Import string: "filename:app_variable"
+        "main:app",
         host="localhost", 
         port=5000, 
         reload=True
