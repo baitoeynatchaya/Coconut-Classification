@@ -1,0 +1,7 @@
+{
+  "liveServer.settings.root": "/frontend",
+  "files.watcherExclude": {
+    "**/backend/uploads/**": true
+  },
+  "liveServer.settings.ignoreFiles": ["**/backend/uploads/**/*"]
+}
