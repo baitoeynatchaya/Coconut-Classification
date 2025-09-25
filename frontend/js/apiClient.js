@@ -4,14 +4,14 @@ export async function apiRequest(endpoint, method = "GET", data = null) {
   const url = `${API_BASE_URL}${endpoint}`;
 
   const options = {
-    method
+    method,
   };
 
   if (data) {
     options.body = data;
   }
 
-  console.log(options)
+  console.log(options);
   try {
     const response = await fetch(url, options);
 

@@ -11,9 +11,11 @@ python main.py
 
 bug
 
-- update user image size and it replace all tag in div
 - should change BG color when click in analyze button instead of hover
 
 what to do feature
 
 - update project structure(script part)
+- show result of predict
+- add animation when predict or ...
+- should handle when network slow or server crash?
