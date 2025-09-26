@@ -12,7 +12,6 @@ python main.py
 bug
 
 - should change BG color when click in analyze button instead of hover
-- get error when sent the same image
 
 what to do feature
 
