@@ -32,7 +32,7 @@ MODEL_PATH = "best_coconut_vgg19_softmax_model (1).keras"
 model = load_model(MODEL_PATH)
 
 # --- Class labels ---
-CLASS_LABELS = ['stage4', 'stage5', 'stage6', 'other']
+CLASS_LABELS = ['other','stage4', 'stage5', 'stage6']
 
 # root endpoint
 @app.get("/")
