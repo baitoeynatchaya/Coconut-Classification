@@ -5,6 +5,7 @@ console.log("is worked");
 const uploadContainer = document.getElementById("uploadContainer");
 const fileInput = document.getElementById("fileInput");
 const analyzeBtn = document.getElementById("analyzeBtn");
+const resultSection = document.getElementById("resultSection");
 let file = null;
 
 uploadContainer.addEventListener("click", () => {
@@ -46,4 +47,11 @@ analyzeBtn.addEventListener("click", async () => {
 
   let result = await apiRequest("/upload-image", "POST", formData);
   console.info(result);
+
+  resultSection.classList.remove("hidden");
+  document.getElementById("predictedResult").textContent =
+    result.predictedResult;
+  document.getElementById("confidenceScore").textContent = (
+    result.confidenceScore * 100
+  ).toFixed(2);
 });

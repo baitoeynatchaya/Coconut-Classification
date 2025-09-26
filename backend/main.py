@@ -73,8 +73,6 @@ async def upload_image(file: UploadFile = File(...)):
     pred_prob = float(np.max(predictions))
  
     return {
-        "filename": file.filename,
-        "saved_to": file_path,
-        "prediction": pred_class,
-        "probability": pred_prob
+        "predictedResult": pred_class,
+        "confidenceScore": pred_prob
     }

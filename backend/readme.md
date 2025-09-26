@@ -12,10 +12,14 @@ python main.py
 bug
 
 - should change BG color when click in analyze button instead of hover
+- get error when sent the same image
 
 what to do feature
 
 - update project structure(script part)
-- show result of predict
 - add animation when predict or ...
 - should handle when network slow or server crash?
+- change api name(name should be something that สื่อ)
+
+ระยะที่จำแนกได้
+ความมั่นใจทำนาย
