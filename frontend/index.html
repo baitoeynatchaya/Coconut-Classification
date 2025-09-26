@@ -36,7 +36,11 @@
           title="User Image"
         />
         <div id="uploadContainer" class="upload-box">
-          <div>
+          <div id="loading" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <div class="loading-text">กำลังโหลด...</div>
+          </div>
+          <div class="upload-content">
             <div class="upload-icon">⬆️</div>
             <p>คลิกเพื่อเลือกรูปภาพ</p>
             <small>รองรับไฟล์ PNG, JPG, JPEG ขนาดไม่เกิน 10MB</small>
@@ -46,12 +50,6 @@
         <!-- ปุ่มวิเคราะห์ -->
         <button id="analyzeBtn">วิเคราะห์ภาพ</button>
       </section>
-
-      <!-- Loading -->
-      <section id="loadingSection" class="card hidden">
-        <p>⏳ กำลังวิเคราะห์รูปภาพ...</p>
-      </section>
-
       <!-- Error -->
       <section id="errorSection" class="card error hidden">
         <p id="errorMessage">เกิดข้อผิดพลาด</p>

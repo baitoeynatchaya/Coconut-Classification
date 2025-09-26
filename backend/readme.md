@@ -17,7 +17,6 @@ bug
 what to do feature
 
 - update project structure(script part)
-- add animation when predict or ...
 - should handle when network slow or server crash?
 
 ระยะที่จำแนกได้

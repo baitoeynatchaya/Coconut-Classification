@@ -6,6 +6,8 @@ const uploadContainer = document.getElementById("uploadContainer");
 const fileInput = document.getElementById("fileInput");
 const analyzeBtn = document.getElementById("analyzeBtn");
 const resultSection = document.getElementById("resultSection");
+const loading = document.getElementById("loading");
+
 let file = null;
 
 uploadContainer.addEventListener("click", () => {
@@ -27,7 +29,8 @@ fileInput.addEventListener("change", () => {
   }
   const reader = new FileReader();
   reader.onload = function (e) {
-    uploadContainer.innerHTML = `<img src="${e.target.result}" alt="Selected Image">`;
+    const uploadContent = uploadContainer.querySelector(".upload-content");
+    uploadContent.innerHTML = `<img src="${e.target.result}" alt="Selected Image">`;
   };
   reader.readAsDataURL(file);
 });
@@ -42,16 +45,20 @@ analyzeBtn.addEventListener("click", async () => {
   }
   // const blob = new Blob([file], { type: file.type });
 
+  loading.classList.remove("hidden");
   const formData = new FormData();
   formData.append("file", file);
+  try {
+    let result = await apiRequest("/predict-coconut", "POST", formData);
+    console.info(result);
 
-  let result = await apiRequest("/predict-coconut", "POST", formData);
-  console.info(result);
-
-  resultSection.classList.remove("hidden");
-  document.getElementById("predictedResult").textContent =
-    result.predictedResult;
-  document.getElementById("confidenceScore").textContent = (
-    result.confidenceScore * 100
-  ).toFixed(2);
+    resultSection.classList.remove("hidden");
+    document.getElementById("predictedResult").textContent =
+      result.predictedResult;
+    document.getElementById("confidenceScore").textContent = (
+      result.confidenceScore * 100
+    ).toFixed(2);
+  } finally {
+    loading.classList.add("hidden");
+  }
 });
