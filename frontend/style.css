@@ -91,7 +91,7 @@ header .logo {
   width: 100%;
   font-size: 16px;
 }
-#analyzeBtn:hover {
+#analyzeBtn:active {
   background-color: #30b219;
 }
 

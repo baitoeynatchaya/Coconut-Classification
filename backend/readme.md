@@ -11,12 +11,7 @@ python main.py
 
 bug
 
-- should change BG color when click in analyze button instead of hover
-
 what to do feature
 
 - update project structure(script part)
 - should handle when network slow or server crash?
-
-ระยะที่จำแนกได้
-ความมั่นใจทำนาย
