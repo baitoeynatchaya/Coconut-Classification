@@ -1,3 +1,4 @@
+from io import BytesIO
 import os
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +7,8 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
 import uvicorn
+from PIL import Image
+
 
 # สร้าง FastAPI app 
 app = FastAPI()
@@ -52,26 +55,47 @@ def predict(data: dict):
     model.summary()
     return {"received_data": data, "status": "success"}
 
+# with save file
 # --- API อัปโหลดรูปและ predict ---
+# @app.post("/predict-coconut")
+# async def upload_image(file: UploadFile = File(...)):
+#     os.makedirs("uploads", exist_ok=True)
+#     file_path = os.path.join("uploads", file.filename)
+
+#     with open(file_path, "wb") as buffer:
+#         shutil.copyfileobj(file.file, buffer)
+
+#     # --- Preprocess รูป ---
+#     img = image.load_img(file_path, target_size=(224, 224))
+#     img_array = image.img_to_array(img)
+#     img_array = np.expand_dims(img_array, axis=0) / 255.0
+   
+#     # --- Predict ---
+#     predictions = model.predict(img_array)
+#     pred_class = CLASS_LABELS[np.argmax(predictions)]
+#     print(predictions)
+#     pred_prob = float(np.max(predictions))
+ 
+#     return {
+#         "predictedResult": pred_class,
+#         "confidenceScore": pred_prob
+#     }
+
+# without save file
 @app.post("/predict-coconut")
 async def upload_image(file: UploadFile = File(...)):
-    os.makedirs("uploads", exist_ok=True)
-    file_path = os.path.join("uploads", file.filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    # --- Preprocess รูป ---
-    img = image.load_img(file_path, target_size=(224, 224))
-    img_array = image.img_to_array(img)
+    # --- อ่านไฟล์ตรงจาก memory ---
+    contents = await file.read()
+    img = Image.open(BytesIO(contents)).convert("RGB")
+    img = img.resize((224, 224))  # ให้ขนาดตรงกับโมเดล
+    img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0) / 255.0
-   
+
     # --- Predict ---
     predictions = model.predict(img_array)
     pred_class = CLASS_LABELS[np.argmax(predictions)]
-    print(predictions)
     pred_prob = float(np.max(predictions))
- 
+
     return {
         "predictedResult": pred_class,
         "confidenceScore": pred_prob
