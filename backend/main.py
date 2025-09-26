@@ -53,7 +53,7 @@ def predict(data: dict):
     return {"received_data": data, "status": "success"}
 
 # --- API อัปโหลดรูปและ predict ---
-@app.post("/upload-image")
+@app.post("/predict-coconut")
 async def upload_image(file: UploadFile = File(...)):
     os.makedirs("uploads", exist_ok=True)
     file_path = os.path.join("uploads", file.filename)

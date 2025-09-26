@@ -45,7 +45,7 @@ analyzeBtn.addEventListener("click", async () => {
   const formData = new FormData();
   formData.append("file", file);
 
-  let result = await apiRequest("/upload-image", "POST", formData);
+  let result = await apiRequest("/predict-coconut", "POST", formData);
   console.info(result);
 
   resultSection.classList.remove("hidden");
