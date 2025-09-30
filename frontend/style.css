@@ -181,6 +181,6 @@ footer {
 
 .stage-card p.advice {
   margin-top: 10px; /* เว้นห่างจากลักษณะ */
-  color: #2e4a11; /* สีเขียวเข้มให้อ่านง่าย */
-  font-style: italic; /* ทำให้แตกต่างเล็กน้อย */
+  color: #1a73e8; /* สีเขียวเข้มให้อ่านง่าย */
+  font-size: 13px;
 }
