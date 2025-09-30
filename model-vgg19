@@ -1,0 +1,542 @@
+# Import เฉพาะที่ใช้ในขั้นตอนนี้
+import os
+from google.colab import drive
+
+# 1. Mount Google Drive
+print("กำลังเชื่อมต่อ Google Drive...")
+drive.mount('/content/drive')
+
+# 2. สร้างโฟลเดอร์โปรเจค
+project_path = '/content/coconut_project'
+os.makedirs(project_path, exist_ok=True)
+
+print("✅ Setup เสร็จเรียบร้อย")
+print(f"📁 โฟลเดอร์โปรเจค: {project_path}")
+
+------------------------------------------------------------------------------------------------------------
+
+import os
+import shutil
+import random
+from math import floor
+
+# กำหนด paths
+source_path = '/content/drive/MyDrive/image'
+output_path = '/content/data_each_state'
+
+random.seed(42)
+
+# ฟังก์ชันคัดลอกไฟล์แบบปลอดภัย (กันชื่อซ้ำ)
+def safe_copy(src, dst_dir, prefix=""):
+    filename = prefix + os.path.basename(src)
+    dst_path = os.path.join(dst_dir, filename)
+    i = 1
+    while os.path.exists(dst_path):
+        name, ext = os.path.splitext(filename)
+        dst_path = os.path.join(dst_dir, f"{name}_{i}{ext}")
+        i += 1
+    shutil.copy2(src, dst_path)
+
+# ล้างข้อมูลเดิม
+if os.path.exists(output_path):
+    print(f"🗑️ พบข้อมูลเดิมที่ {output_path} กำลังลบข้อมูล...")
+    shutil.rmtree(output_path)
+
+# กำหนดการจัดกลุ่ม
+main_classes = ['stage_4', 'stage_5', 'stage_6']
+other_classes = ['stage_1', 'stage_2', 'stage_3']
+
+# สร้างโครงสร้างโฟลเดอร์
+print("\n📂 กำลังสร้างโครงสร้างโฟลเดอร์...")
+for split in ['train', 'val', 'test']:
+    os.makedirs(os.path.join(output_path, split), exist_ok=True)
+    for cls in main_classes:
+        os.makedirs(os.path.join(output_path, split, cls), exist_ok=True)
+    os.makedirs(os.path.join(output_path, split, 'other'), exist_ok=True)
+
+# รวมไฟล์จาก stage 1,2,3 เป็น other
+print("\n🔄 รวม stage 1,2,3 เป็น 'other'...")
+other_files = []
+for stage in other_classes:
+    stage_path = os.path.join(source_path, stage)
+    if os.path.exists(stage_path):
+        files = [f for f in os.listdir(stage_path)
+                 if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        for f in files:
+            other_files.append((stage, f, os.path.join(stage_path, f)))
+        print(f"  ✓ {stage}: {len(files)} รูป")
+
+# สุ่มและแบ่ง other
+random.shuffle(other_files)
+total_other = len(other_files)
+other_n_train = floor(total_other * 0.7)
+other_n_val = floor(total_other * 0.15)
+other_n_test = total_other - other_n_train - other_n_val
+
+print(f"\n📊 คลาส 'other' รวมทั้งหมด: {total_other} รูป")
+print(f"   → Train {other_n_train}, Val {other_n_val}, Test {other_n_test}")
+
+# คัดลอกไฟล์ other แบบปลอดภัย
+for i, (stage, filename, filepath) in enumerate(other_files[:other_n_train]):
+    dst_dir = os.path.join(output_path, 'train', 'other')
+    safe_copy(filepath, dst_dir, prefix=f"{stage}_")
+
+for i, (stage, filename, filepath) in enumerate(other_files[other_n_train:other_n_train+other_n_val]):
+    dst_dir = os.path.join(output_path, 'val', 'other')
+    safe_copy(filepath, dst_dir, prefix=f"{stage}_")
+
+for i, (stage, filename, filepath) in enumerate(other_files[other_n_train+other_n_val:]):
+    dst_dir = os.path.join(output_path, 'test', 'other')
+    safe_copy(filepath, dst_dir, prefix=f"{stage}_")
+
+# แบ่งไฟล์ main classes (stage_4,5,6)
+print("\n🔄 แบ่งข้อมูล stage 4,5,6 ...")
+summary = {}
+
+for class_name in main_classes:
+    class_path = os.path.join(source_path, class_name)
+
+    if not os.path.exists(class_path):
+        print(f"  ✗ ไม่พบโฟลเดอร์ {class_name}, ข้าม...")
+        continue
+
+    files = [f for f in os.listdir(class_path)
+             if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    random.shuffle(files)
+
+    total = len(files)
+    n_train = floor(total * 0.7)
+    n_val = floor(total * 0.15)
+    n_test = total - n_train - n_val
+
+    print(f"  ✓ {class_name}: {total} รูป → Train {n_train}, Val {n_val}, Test {n_test}")
+
+    # คัดลอกไฟล์แบบปลอดภัย
+    for f in files[:n_train]:
+        safe_copy(os.path.join(class_path, f),
+                  os.path.join(output_path, 'train', class_name))
+
+    for f in files[n_train:n_train+n_val]:
+        safe_copy(os.path.join(class_path, f),
+                  os.path.join(output_path, 'val', class_name))
+
+    for f in files[n_train+n_val:]:
+        safe_copy(os.path.join(class_path, f),
+                  os.path.join(output_path, 'test', class_name))
+
+    summary[class_name] = {'train': n_train, 'val': n_val, 'test': n_test, 'total': total}
+
+# บันทึกสรุปจำนวนรูปของ other
+summary['other'] = {'train': other_n_train, 'val': other_n_val, 'test': other_n_test, 'total': total_other}
+
+# แสดงสรุปจำนวนรูปภาพ
+print("\n📊 สรุปจำนวนรูปภาพต่อคลาส")
+print(f"{'Class':<12} {'Train':>7} {'Val':>6} {'Test':>6} {'Total':>7}")
+print("-" * 40)
+for cls in sorted(summary.keys()):
+    d = summary[cls]
+    print(f"{cls:<12} {d['train']:>7} {d['val']:>6} {d['test']:>6} {d['total']:>7}")
+
+print(f"\n✅ เสร็จเรียบร้อย!")
+print(f"📁 ข้อมูลพร้อมใช้งานที่: {output_path}")
+print(f"💡 คลาสที่ใช้งาน: {', '.join(sorted(summary.keys()))}")
+
+---------------------------------------------------------------------------------------------------------- 
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import VGG19 # Import VGG19
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Flatten, Dropout
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import callbacks
+import os
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+import collections
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+
+
+# --- ส่วนที่ 0: ตรวจสอบและแสดงข้อมูลเบื้องต้น ---
+# ------------------------------------------------
+print("--- กำลังตรวจสอบข้อมูลและโครงสร้าง Directory ---")
+data_dir = '/content/data_each_state'
+
+train_path = os.path.join(data_dir, 'train')
+val_path = os.path.join(data_dir, 'val')
+test_path = os.path.join(data_dir, 'test')
+
+if not os.path.exists(data_dir):
+    print(f"❌ ERROR: ไม่พบ Directory ข้อมูลที่: {data_dir}")
+    print("โปรดตรวจสอบว่าได้อัปโหลดและแตกไฟล์ข้อมูลไว้ในตำแหน่งที่ถูกต้องแล้ว")
+else:
+    print(f"✅ พบ Directory ข้อมูลที่: {data_dir}")
+
+    print("\n--- สรุปจำนวนรูปภาพในแต่ละชุด ---")
+    train_count = sum([len(files) for r, d, files in os.walk(train_path)])
+    val_count = sum([len(files) for r, d, files in os.walk(val_path)])
+    test_count = sum([len(files) for r, d, files in os.walk(test_path)])
+
+    print(f"รูปภาพใน train/: {train_count} รูป")
+    print(f"รูปภาพใน val/: {val_count} รูป")
+    print(f"รูปภาพใน test/: {test_count} รูป")
+
+    print("\n--- โครงสร้าง Directory ของ Train ---")
+    for root, dirs, files in os.walk(train_path):
+        level = root.replace(train_path, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        print(f'{indent}{os.path.basename(root)}/ ({len(files)} files)')
+        for d in dirs:
+            print(f'{indent}    {d}/')
+
+    print("\n--- โครงสร้าง Directory ของ Validation ---")
+    for root, dirs, files in os.walk(val_path):
+        level = root.replace(val_path, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        print(f'{indent}{os.path.basename(root)}/ ({len(files)} files)')
+        for d in dirs:
+            print(f'{indent}    {d}/')
+
+    print("\n--- โครงสร้าง Directory ของ Test ---")
+    for root, dirs, files in os.walk(test_path):
+        level = root.replace(test_path, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        print(f'{indent}{os.path.basename(root)}/ ({len(files)} files)')
+        for d in dirs:
+            print(f'{indent}    {d}/')
+
+
+# --- ส่วนที่ 1: กำหนด Path และโหลดข้อมูลด้วย ImageDataGenerator ---
+# ----------------------------------------------------------------
+IMAGE_SIZE = (224, 224) # VGG19 ใช้ 224x224 เป็นมาตรฐาน
+BATCH_SIZE = 32
+
+# Data Augmentation สำหรับชุด Train
+train_datagen = ImageDataGenerator(
+    rescale=1./255, # Normalize pixel values to [0, 1]
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode='nearest'
+)
+
+# Rescaling เท่านั้นสำหรับชุด Validation และ Test (ไม่ทำ Augmentation)
+val_test_datagen = ImageDataGenerator(rescale=1./255)
+
+print("\n⏳ กำลังโหลดข้อมูลชุด Train ด้วย ImageDataGenerator...")
+train_generator = train_datagen.flow_from_directory(
+    os.path.join(data_dir, 'train'),
+    target_size=IMAGE_SIZE,
+    batch_size=BATCH_SIZE,
+    class_mode='categorical',
+    shuffle=True
+)
+print("✅ โหลดข้อมูลชุด Train เสร็จสิ้น")
+
+print("⏳ กำลังโหลดข้อมูลชุด Validation ด้วย ImageDataGenerator...")
+validation_generator = val_test_datagen.flow_from_directory(
+    os.path.join(data_dir, 'val'),
+    target_size=IMAGE_SIZE,
+    batch_size=BATCH_SIZE,
+    class_mode='categorical',
+    shuffle=False
+)
+print("✅ โหลดข้อมูลชุด Validation เสร็จสิ้น")
+
+print("⏳ กำลังโหลดข้อมูลชุด Test ด้วย ImageDataGenerator...")
+test_generator = val_test_datagen.flow_from_directory(
+    os.path.join(data_dir, 'test'),
+    target_size=IMAGE_SIZE,
+    batch_size=BATCH_SIZE,
+    class_mode='categorical',
+    shuffle=False
+)
+print("✅ โหลดข้อมูลชุด Test เสร็จสิ้น")
+
+print("\n💡 ลำดับคลาสที่ตรวจพบโดย ImageDataGenerator:")
+print(train_generator.class_indices)
+num_classes = len(train_generator.class_indices)
+print(f"จำนวนคลาสทั้งหมด: {num_classes}")
+
+print(f"\nข้อมูลพร้อมใช้งานจาก Generator:")
+print(f"  - จำนวนรูปภาพ Train: {train_generator.samples}")
+print(f"  - จำนวนรูปภาพ Validation: {validation_generator.samples}")
+print(f"  - จำนวนรูปภาพ Test: {test_generator.samples}")
+print(f"  - ขนาดรูปภาพ: {IMAGE_SIZE}")
+print(f"  - Batch Size: {BATCH_SIZE}")
+
+
+# --- 1.1 ตรวจสอบการกระจายตัวของคลาสใน Validation Set ---
+# -------------------------------------------------------
+val_class_indices = validation_generator.classes
+val_class_counts = collections.Counter(val_class_indices)
+print("\n--- การกระจายตัวของคลาสใน Validation Set (จาก Generator) ---")
+for class_idx, count in val_class_counts.items():
+    class_name = list(train_generator.class_indices.keys())[list(train_generator.class_indices.values()).index(class_idx)]
+    print(f"  {class_name}: {count} รูป ({count/validation_generator.samples*100:.2f}%)")
+
+# --- 1.2 แสดงรูปภาพตัวอย่างจาก Generator ---
+# -----------------------------------------
+print("\n--- แสดงรูปภาพตัวอย่างจาก Train Generator ---")
+try:
+    sample_batch_images, sample_batch_labels = next(train_generator)
+    print(f"Shape ของ Batch รูปภาพ: {sample_batch_images.shape}")
+    print(f"Shape ของ Batch Labels: {sample_batch_labels.shape}")
+    print(f"ค่าต่ำสุด/สูงสุดของ Pixel: {sample_batch_images.min():.2f} / {sample_batch_images.max():.2f}")
+
+    plt.figure(figsize=(12, 12))
+    for i in range(min(25, sample_batch_images.shape[0])):
+        ax = plt.subplot(5, 5, i + 1)
+        plt.imshow(sample_batch_images[i])
+        predicted_class_idx = np.argmax(sample_batch_labels[i])
+        class_name = list(train_generator.class_indices.keys())[list(train_generator.class_indices.values()).index(predicted_class_idx)]
+        plt.title(f"Class: {class_name}", fontsize=10)
+        plt.axis("off")
+    plt.tight_layout()
+    plt.show()
+
+    print("\n--- แสดงรูปภาพตัวอย่างจาก Validation Generator ---")
+    val_sample_batch_images, val_sample_batch_labels = next(validation_generator)
+    print(f"Shape ของ Validation Batch รูปภาพ: {val_sample_batch_images.shape}")
+    print(f"ค่าต่ำสุด/สูงสุดของ Validation Pixel: {val_sample_batch_images.min():.2f} / {val_sample_batch_images.max():.2f}")
+
+    plt.figure(figsize=(12, 12))
+    for i in range(min(25, val_sample_batch_images.shape[0])):
+        ax = plt.subplot(5, 5, i + 1)
+        plt.imshow(val_sample_batch_images[i])
+        predicted_class_idx = np.argmax(val_sample_batch_labels[i])
+        class_name = list(validation_generator.class_indices.keys())[list(validation_generator.class_indices.values()).index(predicted_class_idx)]
+        plt.title(f"Class: {class_name}", fontsize=10)
+        plt.axis("off")
+    plt.tight_layout()
+    plt.show()
+
+except Exception as e:
+    print(f"❌ ERROR: ไม่สามารถแสดงรูปภาพตัวอย่างได้: {e}")
+    print("โปรดตรวจสอบว่า Generator ทำงานถูกต้องและมีรูปภาพเพียงพอสำหรับหนึ่ง Batch")
+
+
+# --- ส่วนที่ 2: สร้างโมเดล CNN ด้วย VGG19 (Base Model) ---
+# ---------------------------------------------------------------
+print("\n--- กำลังสร้างโมเดล VGG19 (Softmax Output) ---")
+print("⏳ กำลังโหลดโมเดล VGG19 (Pre-trained on ImageNet)...")
+# โหลด VGG19 โดยไม่รวม Top (ส่วน Classification Head เดิมของ ImageNet)
+# เราจะสร้าง Classification Head ใหม่ทั้งหมด
+base_model = VGG19(weights='imagenet', include_top=False, input_shape=IMAGE_SIZE + (3,))
+print("✅ โหลดโมเดล VGG19 เสร็จสิ้น")
+
+print("❄️ กำลัง Freeze Layers ของ VGG19 เพื่อป้องกันการปรับแต่งในรอบ Warm-up...")
+for layer in base_model.layers:
+    layer.trainable = False
+print("✅ Freeze Layers เสร็จสิ้น")
+
+print("\n🛠️ กำลังสร้าง Classification Head ใหม่...")
+x = base_model.output
+x = Flatten()(x) # ใช้ Flatten สำหรับ VGG19
+x = Dense(256, activation='relu')(x) # Dense Layer ขนาด 256 Neurons
+x = Dropout(0.5)(x) # ใช้ Dropout 0.5 สำหรับ VGG (ค่ามาตรฐาน)
+predictions = Dense(num_classes, activation='softmax')(x) # *** Output Layer ใช้ Softmax (ถูกต้อง) ***
+
+model = Model(inputs=base_model.input, outputs=predictions)
+print("✅ สร้าง Classification Head เสร็จสิ้น")
+
+# --- ส่วนที่ 3: Compile โมเดลสำหรับการฝึกรอบแรก (Warm-up) ---
+# -----------------------------------------------------------
+print("\n⚙️ กำลัง Compile โมเดลสำหรับการฝึกรอบแรก (Warm-up)...")
+# Learning Rate สำหรับ Warm-up
+model.compile(optimizer=Adam(learning_rate=0.0001),
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+print("✅ Compile โมเดลเสร็จสิ้น")
+
+print("\n📊 สรุปโครงสร้างโมเดล (ก่อน Fine-tuning):")
+model.summary()
+
+
+# --- ส่วนที่ 4: ฝึกโมเดลรอบแรก (Warm-up Training) ---
+# -------------------------------------------------
+print("\n🚀 กำลังเริ่มการฝึกโมเดลรอบแรก (Train head only - Warm-up)...")
+EPOCHS_WARMUP = 10 # จำนวน Epochs สำหรับการวอร์มอัพ
+history_warmup = model.fit(
+    train_generator,
+    steps_per_epoch=math.ceil(train_generator.samples / BATCH_SIZE),
+    epochs=EPOCHS_WARMUP,
+    validation_data=validation_generator,
+    validation_steps=math.ceil(validation_generator.samples / BATCH_SIZE)
+)
+print("\n✅ การฝึกโมเดลรอบแรกเสร็จสิ้น!")
+
+
+# --- ส่วนที่ 5: Fine-tuning Base Model และฝึกต่อ ---
+# -------------------------------------------------
+
+# Unfreeze Layers บางส่วนสำหรับ VGG19
+UNFREEZE_LAYERS_COUNT = 8 # แนะนำ 6-10 Layers สุดท้ายสำหรับ VGG19
+print(f"\n🧊 กำลัง Unfreeze {UNFREEZE_LAYERS_COUNT} Layers สุดท้ายของ Base Model สำหรับ Fine-tuning...")
+for layer in base_model.layers[-UNFREEZE_LAYERS_COUNT:]:
+    layer.trainable = True
+
+print("\nตรวจสอบ Layer ที่ trainable หลัง Unfreeze:")
+for layer in model.layers:
+    print(f"{layer.name}: {layer.trainable}")
+
+# Compile โมเดลอีกครั้งหลังจาก Unfreeze Layers ด้วย Learning Rate ที่ต่ำลงมาก
+NEW_LEARNING_RATE = 0.000005 # Learning Rate สำหรับ Fine-tuning (5e-6)
+print(f"\n⚙️ กำลัง Compile โมเดลสำหรับการ Fine-tuning (Learning Rate: {NEW_LEARNING_RATE})...")
+model.compile(optimizer=Adam(learning_rate=NEW_LEARNING_RATE),
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+print("✅ Compile โมเดลสำหรับการ Fine-tuning เสร็จสิ้น")
+
+print("\n📊 สรุปโครงสร้างโมเดล (หลัง Fine-tuning Unfreeze บางส่วน):")
+model.summary()
+
+
+# กำหนด Callbacks
+early_stopping = callbacks.EarlyStopping(
+    monitor='val_loss',
+    patience=15,
+    restore_best_weights=True
+)
+
+model_checkpoint_path = 'best_coconut_vgg19_softmax_model.keras' # ชื่อไฟล์บันทึกโมเดล
+model_checkpoint = callbacks.ModelCheckpoint(
+    filepath=model_checkpoint_path,
+    monitor='val_accuracy',
+    save_best_only=True,
+    mode='max',
+    verbose=1
+)
+
+# ฝึกโมเดลต่อด้วย Fine-tuning
+print("\n🚀 กำลังเริ่มการฝึกโมเดล (Fine-tuning VGG19 with Softmax)...")
+EPOCHS_FINE_TUNE = 70 # จำนวน Epochs สำหรับ Fine-tuning
+history_fine_tune = model.fit(
+    train_generator,
+    steps_per_epoch=math.ceil(train_generator.samples / BATCH_SIZE),
+    epochs=EPOCHS_FINE_TUNE,
+    validation_data=validation_generator,
+    validation_steps=math.ceil(validation_generator.samples / BATCH_SIZE),
+    callbacks=[early_stopping, model_checkpoint]
+)
+print("\n✅ การฝึกโมเดล (Fine-tuning VGG19 with Softmax) เสร็จสิ้น!")
+print(f"🌟 โมเดลที่ดีที่สุดถูกบันทึกไว้ที่: {model_checkpoint_path}")
+
+
+# --- ส่วนที่ 6: สร้างกราฟแสดงผลการฝึกทั้งหมด ---
+# -----------------------------------------------
+print("\n📈 กำลังสร้างกราฟแสดงผลการฝึกทั้งหมด...")
+
+acc = history_warmup.history['accuracy'] + history_fine_tune.history['accuracy']
+val_acc = history_warmup.history['val_accuracy'] + history_fine_tune.history['val_accuracy']
+
+loss = history_warmup.history['loss'] + history_fine_tune.history['loss']
+val_loss = history_warmup.history['val_loss'] + history_fine_tune.history['val_loss']
+
+total_epochs = EPOCHS_WARMUP + len(history_fine_tune.history['accuracy'])
+epochs_range = range(total_epochs)
+
+plt.figure(figsize=(14, 6))
+
+# กราฟ Accuracy
+plt.subplot(1, 2, 1)
+plt.plot(epochs_range, acc, label='Training Accuracy')
+plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+plt.plot([EPOCHS_WARMUP-0.5, EPOCHS_WARMUP-0.5], [min(min(acc), min(val_acc)), max(max(acc), max(val_acc))], 'k--', label='Fine-tune Starts')
+plt.legend(loc='lower right')
+plt.title('Training and Validation Accuracy (Softmax)')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.grid(True)
+
+# กราฟ Loss
+plt.subplot(1, 2, 2)
+plt.plot(epochs_range, loss, label='Training Loss')
+plt.plot(epochs_range, val_loss, label='Validation Loss')
+plt.plot([EPOCHS_WARMUP-0.5, EPOCHS_WARMUP-0.5], [min(min(loss), min(val_loss)), max(max(loss), max(val_loss))], 'k--', label='Fine-tune Starts')
+plt.legend(loc='upper right')
+plt.title('Training and Validation Loss (Softmax)')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+
+print("\nกราฟแสดงผลการฝึกรวมทั้งหมดถูกสร้างและแสดงผลแล้ว.")
+
+
+# --- ส่วนที่ 7: การประเมินผลโมเดลขั้นสุดท้ายบนชุด Test ---
+# -------------------------------------------------------
+print("\n--- กำลังประเมินผลโมเดลที่ดีที่สุดบนชุดข้อมูลทดสอบ (Softmax) ---")
+
+if not os.path.exists(model_checkpoint_path):
+    print(f"❌ ไม่พบไฟล์โมเดลที่: {model_checkpoint_path}")
+    print("โปรดตรวจสอบว่าได้ฝึกโมเดลและบันทึกโมเดลที่ดีที่สุดไว้แล้ว")
+else:
+    print(f"\n⏳ กำลังโหลดโมเดลที่ดีที่สุดจาก: {model_checkpoint_path}")
+    best_model = tf.keras.models.load_model(model_checkpoint_path)
+    print("✅ โหลดโมเดลเสร็จสิ้น")
+
+    print("\n📊 กำลังประเมินผลโมเดลบนชุดข้อมูลทดสอบ...")
+    test_loss, test_accuracy = best_model.evaluate(
+        test_generator,
+        steps=math.ceil(test_generator.samples / BATCH_SIZE),
+        verbose=1
+    )
+
+    print("\n--- ผลการประเมินบนชุดข้อมูลทดสอบ ---")
+    print(f"Test Loss: {test_loss:.4f}")
+    print(f"Test Accuracy: {test_accuracy:.4f}")
+
+    # ดึงค่าจริง (True Labels)
+    y_true = test_generator.classes
+
+    # ทำนายผลด้วยโมเดล
+    print("\n⏳ กำลังทำนายผลบนชุดข้อมูลทดสอบสำหรับ Confusion Matrix...")
+    y_pred_proba = best_model.predict(
+        test_generator,
+        steps=math.ceil(test_generator.samples / BATCH_SIZE),
+        verbose=1
+    )
+    y_pred = tf.argmax(y_pred_proba, axis=1).numpy()
+
+    class_labels = list(train_generator.class_indices.keys())
+    print("ลำดับคลาส:", class_labels)
+
+    # สร้าง Confusion Matrix
+    cm = confusion_matrix(y_true, y_pred)
+    print("\n--- Confusion Matrix ---")
+    print(cm)
+
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                xticklabels=class_labels, yticklabels=class_labels)
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    plt.title('Confusion Matrix')
+    plt.show()
+
+    # สร้าง Classification Report
+    print("\n--- Classification Report ---")
+    print(classification_report(y_true, y_pred, target_names=class_labels))
+
+    # --- คำนวณ Accuracy ของแต่ละคลาส --- #
+per_class_accuracy = cm.diagonal() / cm.sum(axis=1)
+
+print("\n--- Per-Class Accuracy ---")
+for i, class_name in enumerate(class_labels):
+    print(f"{class_name}: {per_class_accuracy[i]*100:.2f}%")
+
+# แสดงกราฟแท่ง Per-Class Accuracy
+plt.figure(figsize=(8, 6))
+sns.barplot(x=class_labels, y=per_class_accuracy*100, palette="viridis")
+plt.ylabel("Accuracy (%)")
+plt.xlabel("Class")
+plt.title("Per-Class Accuracy")
+plt.ylim(0, 100)
+plt.show()
