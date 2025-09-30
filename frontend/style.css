@@ -65,6 +65,11 @@ header .logo {
   background: #fafafa;
   cursor: pointer;
 }
+.upload-box:hover {
+  border-color: #30b219; /* เปลี่ยนสีเส้นกรอบ */
+  background-color: #f4fff4; /* พื้นหลังอ่อนๆ */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* เพิ่มเงาให้ดูยกขึ้น */
+}
 .upload-icon {
   font-size: 40px;
   margin-bottom: 10px;
@@ -168,4 +173,14 @@ footer {
 }
 .upload-box {
   position: relative;
+}
+
+.stage-card p {
+  margin: 6px 0;
+}
+
+.stage-card p.advice {
+  margin-top: 10px; /* เว้นห่างจากลักษณะ */
+  color: #2e4a11; /* สีเขียวเข้มให้อ่านง่าย */
+  font-style: italic; /* ทำให้แตกต่างเล็กน้อย */
 }

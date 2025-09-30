@@ -68,8 +68,7 @@ def predict(data: dict):
 #     # --- Preprocess รูป ---
 #     img = image.load_img(file_path, target_size=(224, 224))
 #     img_array = image.img_to_array(img)
-#     img_array = np.expand_dims(img_array, axis=0) / 255.0
-   
+#     img_array = np.expand_dims(img_array, axis=0)/ 255.0
 #     # --- Predict ---
 #     predictions = model.predict(img_array)
 #     pred_class = CLASS_LABELS[np.argmax(predictions)]
@@ -86,11 +85,12 @@ def predict(data: dict):
 async def upload_image(file: UploadFile = File(...)):
     # --- อ่านไฟล์ตรงจาก memory ---
     contents = await file.read()
-    img = Image.open(BytesIO(contents)).convert("RGB")
-    img = img.resize((224, 224))  # ให้ขนาดตรงกับโมเดล
-    img_array = np.array(img)
+    # img = Image.open(BytesIO(contents)).convert("RGB")
+    img = image.load_img(BytesIO(contents), target_size=(224, 224))
+    # img = img.resize((224, 224))
+    img_array = image.img_to_array(img)
+    # img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0) / 255.0
-
     # --- Predict ---
     predictions = model.predict(img_array)
     pred_class = CLASS_LABELS[np.argmax(predictions)]
